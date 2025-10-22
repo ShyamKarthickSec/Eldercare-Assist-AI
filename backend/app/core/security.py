@@ -1,22 +1,9 @@
-# backend/app/core/security.py
-from datetime import datetime, timedelta, timezone
-from typing import Any
-import jwt
 from passlib.context import CryptContext
-from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_jwt(subject: str, role: str, expires_delta: timedelta) -> str:
-    expire = datetime.now(timezone.utc) + expires_delta
-    to_encode = {"sub": subject, "role": role, "exp": expire}
-    return jwt.encode(to_encode, settings.JWT_SECRET, algorithm="HS256")
-
-def decode_jwt(token: str) -> dict[str, Any]:
-    return jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
