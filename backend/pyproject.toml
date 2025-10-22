@@ -1,0 +1,26 @@
+# backend/pyproject.toml
+[tool.poetry]
+name = "eldercare-auth"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+uvicorn = "^0.23.2"
+sqlmodel = "^0.0.12"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pyjwt = "^2.8.0"
+pydantic-settings = "^2.1.0"
+slowapi = "^0.1.0"
+alembic = "^1.12.1"
+fastapi-mail = "^1.4.1"
+jinja2 = "^3.1.2"
+resend = "^0.7.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.3"
+httpx = "^0.25.1"
+ruff = "^0.1.5"
+black = "^23.11.0"
