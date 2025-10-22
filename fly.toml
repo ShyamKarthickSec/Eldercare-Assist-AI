@@ -1,20 +1,28 @@
-# fly.toml app configuration file generated for eldercare-assist-ai on 2025-10-22T06:23:41Z
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
+# fly.toml app configuration file for eldercare-assist-ai
 app = 'eldercare-assist-ai'
-primary_region = 'iad'
+primary_region = 'iad'  # Change to 'syd' if preferred
 
 [build]
+  dockerfile = "backend/Dockerfile"  # Explicitly use your Dockerfile
+
+[env]
+  PORT = "8080"  # Ensure consistency with Dockerfile
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = false  # Keep machines running
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1    # Ensure at least one machine is always running
   processes = ['app']
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
 
 [[vm]]
   memory = '1gb'
