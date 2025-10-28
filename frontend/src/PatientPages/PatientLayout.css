@@ -1,0 +1,218 @@
+/* PatientLayout.css */
+
+/* --- 1. 主布局 --- */
+.patient-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.patient-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.patient-content-area {
+  flex-grow: 1;
+  background-color: #f8f9fa; /* 浅灰色内容背景 */
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* --- 2. 侧边栏Logo和导航 --- */
+.sidebar-logo {
+  font-weight: bold;
+  font-size: 1.8rem;
+  color: #212121;
+  font-family: 'Oswald', sans-serif;
+  padding: 30px;
+  padding-left: 40px; 
+  letter-spacing: 1px;
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 0 15px;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.sidebar-nav li {
+  margin-bottom: 8px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-nav a svg {
+  margin-right: 12px;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.sidebar-nav a:hover {
+  background-color: #f1f3f5;
+  color: #0d6efd;
+}
+
+/* NavLink 的 'active' 状态 */
+.sidebar-nav a.active {
+  background-color: #0d6efd;
+  color: white;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+/* --- 3. 侧边栏底部 (SOS & Profile) --- */
+.sidebar-footer {
+  padding: 15px;
+  margin-top: auto; /* 关键：将这部分推到底部 */
+}
+
+/* SOS 按钮 (UC-10) [cite: 119] */
+.sos-button {
+  width: 100%;
+  padding: 15px;
+  background-color: #e74c3c; /* 红色 */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  margin-bottom: 15px;
+}
+.sos-button:hover {
+  background-color: #c0392b; /* 深红色 */
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+}
+
+/* 个人资料区 (UC-01)  */
+.profile-section {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid #e9ecef;
+}
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.profile-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.profile-role {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+.logout-button {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 5px;
+}
+.logout-button:hover {
+  background-color: #f1f3f5;
+  color: #e74c3c;
+}
+
+/* --- 4. SOS 模态框样式 (UC-10) --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+.modal-content h3 {
+  margin-top: 0;
+  color: #e74c3c;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-secondary {
+  background-color: #f1f3f5;
+  color: #333;
+}
+.btn-secondary:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+.btn-danger:disabled {
+  background-color: #fab3ab;
+  cursor: not-allowed;
+}
+.sos-countdown p {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.countdown-bar-wrapper {
+  width: 100%;
+  height: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.countdown-bar {
+  height: 100%;
+  background-color: #e74c3c;
+  transition: width 1s linear;
+}

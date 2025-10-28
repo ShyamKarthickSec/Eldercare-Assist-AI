@@ -1,0 +1,191 @@
+// Prisma schema for ElderCare Assist
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite doesn't support enums, so we use String with validation in app layer
+// Valid values: PATIENT, CAREGIVER, CLINICIAN
+// Valid ReminderType: MEDICATION, APPOINTMENT
+// Valid AdherenceStatus: TAKEN, MISSED, SNOOZED, SKIPPED
+// Valid TimelineKind: NOTE, ADHERENCE, CLINIC, SUMMARY, CONVERSATION
+// Valid RiskLevel: LOW, MEDIUM, HIGH
+// Valid FhirSource: MOCK
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         String   // UserRole enum
+  createdAt    DateTime @default(now())
+
+  // Relations
+  profile          PatientProfile?
+  consent          Consent?
+  createdReminders Reminder[]
+  authoredNotes    Note[]
+}
+
+model PatientProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  displayName String
+  dateOfBirth DateTime?
+  caregiverId String?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Patient owns these
+  reminders        Reminder[]
+  adherenceEvents  AdherenceEvent[]
+  notes            Note[]
+  timelineEvents   TimelineEvent[]
+  reports          Report[]
+  conversations    Conversation[]
+  voiceCommands    VoiceCommand[]
+  fhirImports      FhirImport[]
+}
+
+model Consent {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  scopes    String // JSON array as string
+  active    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id          String   @id @default(uuid())
+  patientId   String
+  type        String   // ReminderType enum
+  title       String
+  notes       String?
+  dueAt       DateTime
+  recurrence  String?
+  createdById String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  patient         PatientProfile   @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  createdBy       User             @relation(fields: [createdById], references: [id])
+  adherenceEvents AdherenceEvent[]
+
+  @@index([patientId])
+  @@index([dueAt])
+}
+
+model AdherenceEvent {
+  id         String   @id @default(uuid())
+  reminderId String
+  patientId  String
+  status     String   // AdherenceStatus enum
+  at         DateTime @default(now())
+
+  // Relations
+  reminder Reminder       @relation(fields: [reminderId], references: [id], onDelete: Cascade)
+  patient  PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([at])
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  patientId String
+  authorId  String
+  content   String
+  aiSummary String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+  author  User           @relation(fields: [authorId], references: [id])
+
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+model TimelineEvent {
+  id        String   @id @default(uuid())
+  patientId String
+  kind      String   // TimelineKind enum
+  refId     String?
+  title     String
+  detail    String
+  at        DateTime @default(now())
+
+  // Relations
+  patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([at])
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  patientId String
+  uri       String
+  checksum  String
+  createdAt DateTime @default(now())
+
+  // Relations
+  patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  patientId String
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  risk      String    @default("LOW") // RiskLevel enum
+  summary   String?
+
+  // Relations
+  patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+
+  @@index([patientId])
+}
+
+model VoiceCommand {
+  id        String   @id @default(uuid())
+  patientId String
+  rawText   String
+  intent    String
+  highRisk  Boolean  @default(false)
+  confirmed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+model FhirImport {
+  id         String   @id @default(uuid())
+  patientId  String
+  source     String   // FhirSource enum
+  importedAt DateTime @default(now())
+  bundleType String
+  items      Int
+
+  // Relations
+  patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
+
+  @@index([patientId])
+}
+

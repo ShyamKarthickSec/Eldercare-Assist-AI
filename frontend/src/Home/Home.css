@@ -1,0 +1,161 @@
+/* src/components/Home.css */
+
+/* --- 顶部导航栏样式 --- */
+.homeSimpleNavbar {
+    padding: 20px 0;
+    background-color: #fff;
+    border-bottom: 1px solid #e9ecef; /* 添加底部边框 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 添加阴影 */
+}
+.homeSimpleNavbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.homeBrandText {
+    font-weight: bold;
+    font-size: 1.8rem;
+    color: #212121;
+    font-family: 'Oswald', sans-serif;
+}
+
+/* --- Banner 主容器 --- */
+.homeHeroBanner {
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    color: #000;
+    overflow: hidden;
+}
+
+/* --- Banner 背景图 (恢复动画 - 加快速度) --- */
+.home-banner-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-position: top center; /* 保持图片顶部对齐 */
+    background-size: cover; /* 覆盖整个区域 */
+    z-index: 0;
+    /* --- 恢复: animation 属性 (修改为 10s) --- */
+    animation: smoothZoom 5s infinite alternate ease-in-out; /* <-- 修改这里 */
+}
+
+/* --- 内容容器 --- */
+.homeHeroBanner .container {
+    position: relative;
+    z-index: 2;
+    padding-left: 50px;
+    padding-right: 50px;
+    margin-left: 40px;
+    margin-right: 40px;
+    max-width: 1200px;
+}
+
+/* --- Banner 标题样式 --- */
+.banner-tittle {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem; /* 标题行间距 */
+    animation: fadeInUp 0.8s ease-out 0.2s forwards;
+    opacity: 0;
+}
+.homeHeroBanner p.banner-tittle { /* 用于第二行标题 */
+    font-size: 4rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem; /* 增加标题和描述之间的间距 */
+}
+
+/* --- Banner 描述文字样式 --- */
+.banner-text {
+    padding-top: 0; /* 移除上方内边距 */
+    padding-bottom: 2.5rem; /* 增加下方内边距 (按钮上方) */
+    max-width: 600px; /* 限制描述文字宽度 */
+    animation: fadeInUp 0.8s ease-out 0.5s forwards;
+    opacity: 0;
+}
+.banner-text p {
+    font-size: 1.05rem; /* 稍微减小字体大小 */
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 0; /* 移除段落间距，让其成为一个整体 */
+}
+
+/* --- 内容淡入动画 (按钮) --- */
+.homeHeroBanner .container .btnBlue {
+    animation: fadeInUp 0.8s ease-out 0.8s forwards;
+    opacity: 0;
+}
+
+/* --- 按钮样式 --- */
+.btnBlue {
+    display: inline-block;
+    padding: 12px 28px; /* 稍微增加按钮左右内边距 */
+    background-color: #0d6efd;
+    color: #ffffff;
+    font-weight: 500;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+    text-decoration: none;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+.btnBlue:hover {
+    background-color: #0b5ed7;
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+/* --- Keyframe 动画定义 --- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes smoothZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.5); }
+}
+
+
+/* --- 响应式调整 --- */
+@media (max-width: 992px) {
+    .banner-tittle, .homeHeroBanner p.banner-tittle {
+        font-size: 3rem; /* 中等屏幕减小标题 */
+    }
+    .banner-text {
+        max-width: 100%; /* 中等屏幕移除宽度限制 */
+    }
+    .banner-text p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .homeHeroBanner .container {
+        padding-left: 20px;
+        padding-right: 20px;
+        margin-left: 10px;
+        margin-right: 10px;
+        text-align: center; /* 小屏幕文字居中 */
+    }
+    .banner-tittle, .homeHeroBanner p.banner-tittle {
+        font-size: 2.5rem; /* 小屏幕进一步减小标题 */
+    }
+     .banner-text {
+        padding-bottom: 2rem;
+    }
+}
+
