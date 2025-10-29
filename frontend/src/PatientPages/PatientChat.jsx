@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './PatientPages.css';
-import { LuSend, LuSmile, LuHeart, LuMeh, LuFrown, LuWifiOff } from 'react-icons/lu';
+import { LuArrowRight, LuSmile, LuHeart, LuMeh, LuFrown, LuWifiOff } from 'react-icons/lu';
 import { normalizeMood, getMoodText } from '../lib/moodUtils';
 
 /**
@@ -201,7 +201,7 @@ const PatientChat = () => {
             disabled={isOffline}
           />
           <button type="submit" className="chat-send-btn" disabled={isOffline}>
-            <LuSend />
+            <LuArrowRight />
           </button>
         </form>
       </div>
