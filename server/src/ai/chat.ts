@@ -84,3 +84,47 @@ const getRuleBasedResponse = (message: string): string => {
   return "I hear you. Thank you for sharing that with me. I'm here if you'd like to talk more about it.";
 };
 
+/**
+ * Get AI chat response with risk assessment for companion chat
+ * Used by companion.controller.ts
+ */
+export const getAiChatResponse = async (
+  patientId: string,
+  message: string,
+  mood: string = 'Neutral'
+): Promise<{ reply: string; risk: 'LOW' | 'MEDIUM' | 'HIGH' }> => {
+  // Generate the chat response
+  const reply = await generateChatResponse(message, { mood });
+  
+  // Assess risk based on message content
+  let risk: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+  const lowerMessage = message.toLowerCase();
+  const lowerReply = reply.toLowerCase();
+  
+  // High risk indicators
+  if (
+    lowerMessage.includes('hurt myself') ||
+    lowerMessage.includes('suicide') ||
+    lowerMessage.includes('want to die') ||
+    lowerMessage.includes('end it all') ||
+    lowerMessage.includes('severe pain') ||
+    lowerMessage.includes('emergency')
+  ) {
+    risk = 'HIGH';
+  }
+  // Medium risk indicators
+  else if (
+    lowerMessage.includes('lonely') ||
+    lowerMessage.includes('sad') ||
+    lowerMessage.includes('depressed') ||
+    lowerMessage.includes('anxious') ||
+    lowerMessage.includes('pain') ||
+    lowerMessage.includes('worried') ||
+    mood.toLowerCase().includes('sad')
+  ) {
+    risk = 'MEDIUM';
+  }
+  
+  return { reply, risk };
+};
+
