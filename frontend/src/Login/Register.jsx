@@ -65,7 +65,7 @@ const Register = () => {
       <header className="auth-navbar">
         <div className="container">
           <div className="navbar-logo">
-            AgCarE.
+            ElderCare Assist AI
           </div>
           <nav className="navbar-nav">
             {/* 按钮样式已在 AuthLayout.css 中更新为蓝色按钮 */}
@@ -91,7 +91,7 @@ const Register = () => {
         {/* 内容区域 */}
         <div className="content-area">
           <div className="hero-text">
-            <p className="welcome-text">WELCOME TO AgCarE.</p>
+            <p className="welcome-text">WELCOME TO ElderCare Assist AI</p>
             <h1>Caring for every journey of aging—with dignity, respect, and heart.</h1>
           </div>
 

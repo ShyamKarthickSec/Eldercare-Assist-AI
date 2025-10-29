@@ -18,12 +18,21 @@ const Login = () => {
       const { api } = await import('../lib/api.js');
       const response = await api.post('/auth/login', { email, password });
       
-      // Store token
+      // Store token and user data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
       // Redirect based on role
-      navigate('/patient');
+      const role = response.data.user.role;
+      if (role === 'PATIENT') {
+        navigate('/patient');
+      } else if (role === 'CLINICIAN') {
+        navigate('/clinician');
+      } else if (role === 'CAREGIVER') {
+        navigate('/caregiver');
+      } else {
+        navigate('/patient'); // Fallback
+      }
     } catch (error) {
       console.error('Login error:', error);
       alert(error.response?.data?.error || 'Login failed. Please try again.');
@@ -36,7 +45,7 @@ const Login = () => {
       <header className="auth-navbar">
         <div className="container">
           <div className="navbar-logo">
-            AgCarE.
+            ElderCare Assist AI
           </div>
           <nav className="navbar-nav">
             <a href="/login" className="nav-button active">
@@ -58,7 +67,7 @@ const Login = () => {
 
         <div className="content-area">
           <div className="hero-text">
-            <p className="welcome-text">WELCOME TO AgCarE.</p>
+            <p className="welcome-text">WELCOME TO ElderCare Assist AI</p>
             <h1>Caring for every journey of aging—with dignity, respect, and heart.</h1>
           </div>
 

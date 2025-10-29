@@ -1,14 +1,19 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import { UserRole, ReminderType, TimelineKind } from './common/types';
+import seedEnhancedDatabase from './seed.enhanced';
 
 export const seedDatabase = async () => {
   // Check if already seeded
   const userCount = await prisma.user.count();
   if (userCount > 0) {
-    console.log('[SEED] Database already seeded');
+    console.log('[SEED] Database already seeded. To reseed with enhanced data, delete dev.db and run again.');
     return;
   }
+  
+  // Use enhanced seeding
+  await seedEnhancedDatabase();
+  return;
 
   console.log('[SEED] Seeding database with demo data...');
 

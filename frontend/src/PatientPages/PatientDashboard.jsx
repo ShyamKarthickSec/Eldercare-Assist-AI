@@ -8,6 +8,7 @@ import {
 } from 'react-icons/lu';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { normalizeMood } from '../lib/moodUtils';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -47,6 +48,32 @@ const PatientDashboard = () => {
 
     // --- State for data ---
     const [timelineData, setTimelineData] = useState(dayData);
+
+    // Handle mood selection and persist to backend
+    const handleMoodSelect = async (selectedMood) => {
+        const normalizedMood = normalizeMood(selectedMood);
+        setMood(normalizedMood);
+        
+        try {
+            // Get user data to find patient ID
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!user.id) return;
+
+            // Import api dynamically
+            const { api } = await import('../lib/api.js');
+            
+            // Record mood to backend with normalized value
+            await api.post(`/patients/${user.id}/mood`, {
+                mood: normalizedMood,
+                note: `Selected via dashboard mood widget`
+            });
+
+            console.log(`✅ Mood "${normalizedMood}" recorded successfully from dashboard!`);
+        } catch (error) {
+            console.error('Failed to record mood:', error);
+            // Don't show error to user - mood still works locally
+        }
+    };
 
     const reminderData = [
         { id: 1, title: 'Appt: Dr. Smith', time: '10:30 AM', icon: <LuCalendarDays />, iconClass: 'appt' },
@@ -255,10 +282,10 @@ const PatientDashboard = () => {
                             <h3>How are you feeling?</h3>
                         </div>
                         <div className="page-card-body mood-widget-body">
-                            <span className={`mood-selector ${mood === 'Happy' ? 'selected' : ''}`} title="Happy" onClick={() => setMood('Happy')}><LuSmile /></span>
-                            <span className={`mood-selector ${mood === 'Neutral' ? 'selected' : ''}`} title="Neutral" onClick={() => setMood('Neutral')}><LuMeh /></span>
-                            <span className={`mood-selector ${mood === 'Sad' ? 'selected' : ''}`} title="Sad" onClick={() => setMood('Sad')}><LuFrown /></span>
-                            <span className={`mood-selector ${mood === 'Loved' ? 'selected' : ''}`} title="Loved" onClick={() => setMood('Loved')}><LuHeart /></span>
+                            <span className={`mood-selector ${mood === 'Happy' ? 'selected' : ''}`} title="Happy" onClick={() => handleMoodSelect('Happy')}><LuSmile /></span>
+                            <span className={`mood-selector ${mood === 'Neutral' ? 'selected' : ''}`} title="Neutral" onClick={() => handleMoodSelect('Neutral')}><LuMeh /></span>
+                            <span className={`mood-selector ${mood === 'Sad' ? 'selected' : ''}`} title="Sad" onClick={() => handleMoodSelect('Sad')}><LuFrown /></span>
+                            <span className={`mood-selector ${mood === 'Loved' ? 'selected' : ''}`} title="Loved" onClick={() => handleMoodSelect('Loved')}><LuHeart /></span>
                         </div>
                     </div>
 

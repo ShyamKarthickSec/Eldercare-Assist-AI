@@ -14,7 +14,9 @@ export const getPatientTimeline = async (req: AuthRequest, res: Response) => {
   const toDate = to ? new Date(to as string) : undefined;
   const limitNum = limit ? parseInt(limit as string) : 50;
   
-  const events = getTimeline(id, fromDate, toDate, limitNum);
+  const events = await getTimeline(id, fromDate, toDate, limitNum); // FIXED: Added await
+  
+  console.log(`[TIMELINE] Fetched ${events.length} events for patient ${id}`);
   
   res.json(events);
 };

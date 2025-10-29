@@ -18,6 +18,14 @@ import PatientVoice from "./PatientPages/PatientVoice.jsx";
 import PatientHealthRecord from "./PatientPages/PatientHealthRecord.jsx";
 import PatientProfile from "./PatientPages/PatientProfile.jsx";
 
+// --- Clinician (Doctor) 页面 ---
+import ClinicianLayout from "./ClinicianPages/ClinicianLayout.jsx";
+import ClinicianDashboard from "./ClinicianPages/ClinicianDashboard.jsx";
+
+// --- Caregiver 页面 ---
+import CaregiverLayout from "./CaregiverPages/CaregiverLayout.jsx";
+import CaregiverDashboard from "./CaregiverPages/CaregiverDashboard.jsx";
+
 function App() {
   return (
     <Router>
@@ -47,6 +55,18 @@ function App() {
           <Route path="voice" element={<PatientVoice />} />
           <Route path="records" element={<PatientHealthRecord />} />
           <Route path="profile" element={<PatientProfile />} />
+        </Route>
+
+        {/* --- Clinician (Doctor) Routes --- */}
+        <Route path="/clinician" element={<ClinicianLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<ClinicianDashboard />} />
+        </Route>
+
+        {/* --- Caregiver Routes --- */}
+        <Route path="/caregiver" element={<CaregiverLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<CaregiverDashboard />} />
         </Route>
 
         {/* --- 兜底路由 --- */}

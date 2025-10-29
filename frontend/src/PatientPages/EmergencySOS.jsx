@@ -29,9 +29,28 @@ const EmergencySOS = () => {
     setModalOpen(true); // UC-10
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsSending(true);
     setStatusMessage('Sending alert ...'); // UC-10
+    
+    // Create SOS alert via backend
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.id) {
+        const { api } = await import('../lib/api.js');
+        await api.post(`/patients/${user.id}/alerts/create`, {
+          type: 'SOS',
+          severity: 'HIGH',
+          title: 'SOS Emergency Alert',
+          description: 'Patient triggered emergency SOS button - immediate attention required',
+          status: 'ACTIVE'
+        });
+        console.log('✅ SOS alert created and sent to caregiver!');
+      }
+    } catch (error) {
+      console.error('Failed to create SOS alert:', error);
+      // Continue with countdown even if API fails
+    }
   };
 
   const handleCancel = () => {

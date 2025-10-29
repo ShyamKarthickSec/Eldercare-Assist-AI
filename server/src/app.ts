@@ -15,6 +15,10 @@ import companionRoutes from './companion/companion.routes';
 import voiceRoutes from './voice/voice.routes';
 import reportRoutes from './reports/reports.routes';
 import fhirRoutes from './fhir/fhir.routes';
+import aiRoutes from './ai/ai.routes';
+import patientRoutes from './patients/patients.routes';
+import moodRoutes from './mood/mood.routes';
+import alertRoutes from './alerts/alerts.routes';
 
 export const createApp = () => {
   const app = express();
@@ -49,6 +53,10 @@ export const createApp = () => {
   app.use('/api', voiceRoutes);
   app.use('/api', reportRoutes);
   app.use('/api', fhirRoutes);
+  app.use('/api', aiRoutes);
+  app.use('/api', patientRoutes);
+  app.use('/api', moodRoutes);
+  app.use('/api', alertRoutes);
 
   // Swagger documentation
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

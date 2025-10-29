@@ -37,7 +37,7 @@ const ForgotPassword = () => {
       <header className="auth-navbar">
         <div className="container">
           <div className="navbar-logo">
-            AgCarE.
+            ElderCare Assist AI
           </div>
           <nav className="navbar-nav">
             {/* --- MODIFIED: 两个按钮均不 'active' --- */}

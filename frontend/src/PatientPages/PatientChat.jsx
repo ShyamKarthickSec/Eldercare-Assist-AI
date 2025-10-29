@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './PatientPages.css';
 import { LuSend, LuSmile, LuHeart, LuMeh, LuFrown, LuWifiOff } from 'react-icons/lu';
+import { normalizeMood, getMoodText } from '../lib/moodUtils';
 
 /**
  * 陪伴聊天页面 (UC-08)
@@ -14,7 +15,7 @@ const PatientChat = () => {
     { id: 3, sender: 'ai', text: "I'm sorry to hear that. Remember to get some rest. Is there anything I can help you with?", time: '09:31 AM' },
   ]);
   const [inputText, setInputText] = useState('');
-  const [mood, setMood] = useState('Meh'); // UC-08 [cite: 252]
+  const [mood, setMood] = useState('Neutral'); // Changed from 'Meh' to 'Neutral' (canonical)
   const [isOffline, setIsOffline] = useState(!navigator.onLine); // UC-08 [cite: 255]
   const [isAiTyping, setIsAiTyping] = useState(false); // UI 增强
   
@@ -39,28 +40,60 @@ const PatientChat = () => {
     };
   }, []);
 
-  // 模拟 AI 回复的函数
-  const triggerAiResponse = (userMessageText) => {
+  // AI Response with Backend Integration
+  const triggerAiResponse = async (userMessageText) => {
     setIsAiTyping(true);
     
-    setTimeout(() => {
-      let aiText = `You mentioned: "${userMessageText}". That's interesting!`;
-
-      // UC-08: 检查情绪以提供同理心回复 
-      if (mood === 'Sad' && userMessageText.toLowerCase().includes('feeling sad')) {
-        aiText = "I'm really sorry to hear you're feeling sad. Please know that I'm here to listen. Would you like to talk about what's on your mind?";
+    try {
+      // Get user data to find patient ID
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.id) {
+        throw new Error('User not found');
       }
+
+      // Import api dynamically
+      const { api } = await import('../lib/api.js');
+      
+      // Call backend AI companion endpoint with normalized mood
+      const normalizedMood = normalizeMood(mood);
+      const response = await api.post('/companion/message', {
+        message: userMessageText,
+        mood: normalizedMood
+      });
 
       const aiResponse = {
         id: Date.now(),
         sender: 'ai',
-        text: aiText,
+        text: response.data.reply || "I'm here to listen. How can I help?",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
       setIsAiTyping(false);
       setMessages(prev => [...prev, aiResponse]);
-    }, 1500); // 模拟 AI 思考
+      
+      console.log('✅ AI response received from backend');
+    } catch (error) {
+      console.error('AI chat error:', error);
+      
+      // Fallback to empathetic local response if API fails
+      let fallbackText = `Thank you for sharing that with me. I'm here to support you.`;
+      
+      if (mood === 'Sad' || userMessageText.toLowerCase().includes('sad')) {
+        fallbackText = "I'm sorry you're feeling this way. Remember, I'm here to listen and your caregiver is always available if you need support.";
+      } else if (userMessageText.toLowerCase().includes('happy') || userMessageText.toLowerCase().includes('good')) {
+        fallbackText = "That's wonderful to hear! I'm so glad you're feeling positive today! 😊";
+      }
+      
+      const fallbackResponse = {
+        id: Date.now(),
+        sender: 'ai',
+        text: fallbackText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      setIsAiTyping(false);
+      setMessages(prev => [...prev, fallbackResponse]);
+    }
   };
 
   const handleSend = (e) => { // UC-08 [cite: 250]
@@ -79,9 +112,26 @@ const PatientChat = () => {
     setInputText('');
   };
 
-  // UI 增强: 点击情绪图标发送消息
-  const handleMoodSelect = (newMood, moodText) => {
-    setMood(newMood);
+  // UI 增强: 点击情绪图标发送消息 + persist to backend
+  const handleMoodSelect = async (newMood, moodText) => {
+    const normalizedMood = normalizeMood(newMood);
+    setMood(normalizedMood);
+    
+    // Persist mood to backend (same as PatientDashboard)
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.id) {
+        const { api } = await import('../lib/api.js');
+        await api.post(`/patients/${user.id}/mood`, {
+          mood: normalizedMood,
+          note: `Selected via companion chat: ${moodText}`
+        });
+        console.log(`✅ Mood "${normalizedMood}" recorded from chat!`);
+      }
+    } catch (error) {
+      console.error('Failed to record mood from chat:', error);
+    }
+    
     const newUserMessage = {
       id: Date.now(),
       sender: 'user',

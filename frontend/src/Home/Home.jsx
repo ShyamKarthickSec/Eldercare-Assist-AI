@@ -7,7 +7,7 @@ const Home = () => {
         <div className="home-page-wrapper">
             <nav className="homeSimpleNavbar">
                 <div className="container">
-                   <span className="homeBrandText">AgCarE.</span>
+                   <span className="homeBrandText">ElderCare Assist AI</span>
                    <a href="/login" className="btnBlue">
                    Start now</a>
                 </div>
