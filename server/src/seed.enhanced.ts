@@ -345,98 +345,276 @@ export const seedEnhancedDatabase = async () => {
 
   console.log('[SEED] ✅ Created 2 voice command samples');
 
-  // ==================== CREATE FHIR IMPORTS (MOCK HEALTH RECORDS) ====================
-  const fhirImport1 = await prisma.fhirImport.create({
-    data: {
-      patientId: patientUser.id,
-      source: FhirSource.MOCK,
-      bundleType: 'Collection',
-      items: 5,
-    },
-  });
+  // ==================== GENERATE & IMPORT COMPREHENSIVE FHIR DATA ====================
+  console.log('[SEED] 🏥 Generating comprehensive FHIR R4 health records (90 days)...');
+  
+  try {
+    const { generateFHIRSamplesForPatient } = require('./fhir/generate-samples');
+    const { importFHIRData } = require('./fhir/fhir.connector');
+    
+    // Generate rich FHIR data for John Doe
+    console.log('[SEED] 📄 Generating FHIR data for John Doe...');
+    const johnDoeResult = await generateFHIRSamplesForPatient(patientUser.id, 'John Doe');
+    
+    // Import the generated data
+    console.log('[SEED] 📥 Importing FHIR data for John Doe...');
+    const importResult1 = await importFHIRData(patientUser.id);
+    console.log(`[SEED] ✅ Imported ${importResult1.items} FHIR resources for John Doe`);
+    
+    // Generate and import for Mary Smith
+    console.log('[SEED] 📄 Generating FHIR data for Mary Smith...');
+    const marySmithResult = await generateFHIRSamplesForPatient(patient2User.id, 'Mary Smith');
+    
+    console.log('[SEED] 📥 Importing FHIR data for Mary Smith...');
+    const importResult2 = await importFHIRData(patient2User.id);
+    console.log(`[SEED] ✅ Imported ${importResult2.items} FHIR resources for Mary Smith`);
+    
+    console.log('[SEED] ✅ Generated and imported comprehensive FHIR health records');
+    console.log(`[SEED]    Total resources: ${johnDoeResult.resourceCount + marySmithResult.resourceCount}`);
+  } catch (error) {
+    console.error('[SEED] ❌ ERROR generating/importing FHIR data:');
+    console.error(error);
+    console.log('[SEED] ⚠️  Continuing with seed despite FHIR error...');
+  }
 
-  const fhirImport2 = await prisma.fhirImport.create({
-    data: {
-      patientId: patient2User.id,
-      source: FhirSource.MOCK,
-      bundleType: 'Collection',
-      items: 3,
-    },
+  // ==================== ADD HISTORICAL FHIR IMPORT RECORDS ====================
+  console.log('[SEED] 📋 Creating historical FHIR import records...');
+  
+  // Add historical imports for John Doe (simulate past imports)
+  await prisma.fhirImport.createMany({
+    data: [
+      {
+        patientId: patientUser.id,
+        source: FhirSource.MOCK,
+        bundleType: 'collection',
+        items: 45,
+        importedAt: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000), // 6 months ago
+      },
+      {
+        patientId: patientUser.id,
+        source: FhirSource.MOCK,
+        bundleType: 'collection',
+        items: 32,
+        importedAt: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000), // 4 months ago
+      },
+      {
+        patientId: patientUser.id,
+        source: FhirSource.MOCK,
+        bundleType: 'collection',
+        items: 28,
+        importedAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000), // 2 months ago
+      },
+      // Historical imports for Mary Smith
+      {
+        patientId: patient2User.id,
+        source: FhirSource.MOCK,
+        bundleType: 'collection',
+        items: 38,
+        importedAt: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000), // 5 months ago
+      },
+      {
+        patientId: patient2User.id,
+        source: FhirSource.MOCK,
+        bundleType: 'collection',
+        items: 25,
+        importedAt: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), // 3 months ago
+      },
+    ],
   });
-
-  // Add FHIR timeline events
+  
+  // Add corresponding timeline events for historical imports
   await prisma.timelineEvent.createMany({
     data: [
       {
         patientId: patientUser.id,
         kind: TimelineKind.CLINIC,
-        title: 'FHIR Data Imported - General Check-up',
-        detail: 'Health records imported: BP 120/80 mmHg, Glucose 90 mg/dL, Cholesterol 180 mg/dL. Prescriptions: Amlodipine, Metformin.',
-        refId: fhirImport1.id,
-        at: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+        title: 'Health Records Imported',
+        detail: 'Initial health records imported from My Health Record (45 items): Previous medical history, baseline labs, and prescriptions.',
+        at: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000),
       },
       {
         patientId: patientUser.id,
         kind: TimelineKind.CLINIC,
-        title: 'Diagnosis Added - Mild Hypertension',
-        detail: 'Diagnosed with mild hypertension. Prescribed Amlodipine 5mg daily. Follow-up in 3 months.',
-        at: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000),
+        title: 'Health Records Updated',
+        detail: 'Updated health records imported (32 items): Recent lab results, medication changes, and follow-up visit notes.',
+        at: new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000),
+      },
+      {
+        patientId: patientUser.id,
+        kind: TimelineKind.CLINIC,
+        title: 'Health Records Sync',
+        detail: 'Health records synchronized (28 items): Latest vitals, prescription renewals, and immunization updates.',
+        at: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
       },
       {
         patientId: patient2User.id,
         kind: TimelineKind.CLINIC,
-        title: 'FHIR Data Imported - Routine Visit',
-        detail: 'Routine check-up completed. All vitals normal. Prescribed Aspirin 81mg for heart health.',
-        refId: fhirImport2.id,
-        at: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
-      },
-    ],
-  });
-
-  console.log('[SEED] ✅ Created FHIR import records with health data');
-
-  // ==================== CREATE REPORTS ====================
-  await prisma.report.createMany({
-    data: [
-      {
-        patientId: patientUser.id,
-        uri: '/reports/john-doe-2025-01-weekly.pdf',
-        checksum: 'abc123',
-      },
-      {
-        patientId: patientUser.id,
-        uri: '/reports/john-doe-2025-02-weekly.pdf',
-        checksum: 'def456',
+        title: 'Health Records Imported',
+        detail: 'Initial health records imported from My Health Record (38 items): Medical history and baseline assessments.',
+        at: new Date(now.getTime() - 150 * 24 * 60 * 60 * 1000),
       },
       {
         patientId: patient2User.id,
-        uri: '/reports/mary-smith-2025-01-weekly.pdf',
-        checksum: 'ghi789',
+        kind: TimelineKind.CLINIC,
+        title: 'Health Records Updated',
+        detail: 'Updated health records imported (25 items): Recent test results and medication adjustments.',
+        at: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
       },
     ],
   });
+  
+  console.log('[SEED] ✅ Created 5 historical FHIR import records');
 
+  // ==================== CREATE AI-GENERATED PDF REPORTS ====================
+  console.log('[SEED] 📄 Generating AI-powered PDF health reports...');
+  
+  try {
+    const { generateReport } = require('./reports/reports.service');
+    
+    // Generate 3 reports for John Doe (patientUser)
+    // Report 1: Last 7 days
+    console.log('[SEED] Generating report 1/5...');
+    const report1 = await generateReport(patientUser.id, {
+      title: 'Weekly Health Report - Past 7 Days',
+      periodStart: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      periodEnd: now
+    });
+    console.log(`[SEED] ✅ Report 1 generated: ${report1.uri}`);
+  
+  await prisma.report.create({
+    data: {
+      patientId: patientUser.id,
+      title: report1.title,
+      periodStart: report1.periodStart,
+      periodEnd: report1.periodEnd,
+      uri: report1.uri,
+      checksum: report1.checksum,
+      generatedBy: 'AI',
+      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000) // Created yesterday
+    }
+  });
+  
+  // Report 2: Previous week (8-14 days ago)
+  const report2 = await generateReport(patientUser.id, {
+    title: 'Weekly Health Report - Previous Week',
+    periodStart: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+    periodEnd: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  });
+  
+  await prisma.report.create({
+    data: {
+      patientId: patientUser.id,
+      title: report2.title,
+      periodStart: report2.periodStart,
+      periodEnd: report2.periodEnd,
+      uri: report2.uri,
+      checksum: report2.checksum,
+      generatedBy: 'AI',
+      createdAt: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000) // Created 8 days ago
+    }
+  });
+  
+  // Report 3: Monthly summary (last 30 days)
+  const report3 = await generateReport(patientUser.id, {
+    title: 'Monthly Health Report - Last 30 Days',
+    periodStart: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+    periodEnd: now
+  });
+  
+  await prisma.report.create({
+    data: {
+      patientId: patientUser.id,
+      title: report3.title,
+      periodStart: report3.periodStart,
+      periodEnd: report3.periodEnd,
+      uri: report3.uri,
+      checksum: report3.checksum,
+      generatedBy: 'AI',
+      createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000) // Created 2 hours ago
+    }
+  });
+  
+  // Generate 2 reports for Mary Smith (patient2User)
+  // Report 1: Last 7 days
+  const report4 = await generateReport(patient2User.id, {
+    title: 'Weekly Health Report - Past 7 Days',
+    periodStart: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+    periodEnd: now
+  });
+  
+  await prisma.report.create({
+    data: {
+      patientId: patient2User.id,
+      title: report4.title,
+      periodStart: report4.periodStart,
+      periodEnd: report4.periodEnd,
+      uri: report4.uri,
+      checksum: report4.checksum,
+      generatedBy: 'AI',
+      createdAt: now
+    }
+  });
+  
+  // Report 2: Previous week
+  const report5 = await generateReport(patient2User.id, {
+    title: 'Weekly Health Report - Previous Week',
+    periodStart: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+    periodEnd: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  });
+  
+  await prisma.report.create({
+    data: {
+      patientId: patient2User.id,
+      title: report5.title,
+      periodStart: report5.periodStart,
+      periodEnd: report5.periodEnd,
+      uri: report5.uri,
+      checksum: report5.checksum,
+      generatedBy: 'AI',
+      createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    }
+  });
+  
   // Add report timeline events
   await prisma.timelineEvent.createMany({
     data: [
       {
         patientId: patientUser.id,
         kind: TimelineKind.SUMMARY,
-        title: 'Weekly Health Report Generated',
-        detail: 'Comprehensive health summary for week ending Jan 27. Adherence: 85%. Mood: Positive.',
-        at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        title: 'AI Health Report Generated',
+        detail: `${report1.title} - Comprehensive AI-generated health summary with adherence metrics, mood analysis, and clinical insights.`,
+        at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
       },
       {
         patientId: patientUser.id,
         kind: TimelineKind.SUMMARY,
-        title: 'Weekly Health Report Generated',
-        detail: 'Comprehensive health summary for week ending Feb 3. Adherence: 90%. Mood: Very positive.',
-        at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000),
+        title: 'AI Health Report Generated',
+        detail: `${report2.title} - Comprehensive AI-generated health summary with adherence metrics, mood analysis, and clinical insights.`,
+        at: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000),
+      },
+      {
+        patientId: patientUser.id,
+        kind: TimelineKind.SUMMARY,
+        title: 'AI Health Report Generated',
+        detail: `${report3.title} - Comprehensive AI-generated health summary with adherence metrics, mood analysis, and clinical insights.`,
+        at: new Date(now.getTime() - 2 * 60 * 60 * 1000),
+      },
+      {
+        patientId: patient2User.id,
+        kind: TimelineKind.SUMMARY,
+        title: 'AI Health Report Generated',
+        detail: `${report4.title} - Comprehensive AI-generated health summary.`,
+        at: now,
       },
     ],
   });
 
-  console.log('[SEED] ✅ Created 3 health reports with timeline entries');
+    console.log('[SEED] ✅ Created 5 AI-generated PDF health reports with real files!');
+  } catch (error) {
+    console.error('[SEED] ❌ ERROR generating PDF reports:');
+    console.error(error);
+    console.log('[SEED] ⚠️  Continuing with seed despite PDF generation error...');
+  }
 
   // ==================== CREATE ADHERENCE TIMELINE EVENTS ====================
   await prisma.timelineEvent.createMany({

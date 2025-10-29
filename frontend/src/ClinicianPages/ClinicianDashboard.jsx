@@ -243,7 +243,7 @@ const ClinicianDashboard = () => {
 
           <div id="reports" className="page-card animate-fadeInUp" style={{animationDelay: '0.4s'}}>
             <div className="page-card-header">
-              <h2><LuFileText /> Health Reports</h2>
+              <h2><LuFileText /> AI-Generated Health Reports</h2>
             </div>
             <div className="page-card-body">
               {reports.length === 0 ? (
@@ -251,16 +251,123 @@ const ClinicianDashboard = () => {
               ) : (
                 <div style={{ display: 'grid', gap: '1rem' }}>
                   {reports.map(report => (
-                    <a 
+                    <div 
                       key={report.id}
-                      href={`http://localhost:3001${report.uri}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="btn-action"
-                      style={{ display: 'inline-block', textDecoration: 'none' }}
+                      style={{ 
+                        padding: '1.25rem', 
+                        backgroundColor: '#f8fafb', 
+                        borderRadius: '10px',
+                        border: '1px solid #e2e8f0',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.15)';
+                        e.currentTarget.style.borderColor = '#10b981';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                      }}
                     >
-                      📄 View Report - {new Date(report.createdAt).toLocaleDateString()}
-                    </a>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600', color: '#1e293b', marginBottom: '0.5rem' }}>
+                            📄 {report.title || 'Health Report'}
+                          </h3>
+                          <div style={{ fontSize: '0.875rem', color: '#64748b', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                            {report.periodStart && report.periodEnd && (
+                              <span>
+                                <strong>Period:</strong> {new Date(report.periodStart).toLocaleDateString()} - {new Date(report.periodEnd).toLocaleDateString()}
+                              </span>
+                            )}
+                            <span>
+                              <strong>Generated:</strong> {new Date(report.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        {report.generatedBy === 'AI' && (
+                          <span style={{ 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '0.4rem',
+                            fontSize: '0.75rem', 
+                            padding: '0.4rem 0.75rem', 
+                            backgroundColor: '#d1fae5', 
+                            color: '#065f46',
+                            borderRadius: '16px',
+                            fontWeight: '600',
+                            border: '1px solid #a7f3d0',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            🤖 AI-Generated
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <a 
+                          href={`http://localhost:3001${report.uri}`} 
+                          download
+                          style={{ 
+                            flex: 1,
+                            minWidth: '150px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            padding: '0.625rem 1.25rem', 
+                            backgroundColor: '#10b981', 
+                            color: 'white', 
+                            textDecoration: 'none', 
+                            borderRadius: '6px',
+                            fontWeight: '500',
+                            fontSize: '0.9rem',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#059669';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#10b981';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          📥 Download PDF
+                        </a>
+                        <a 
+                          href={`http://localhost:3001${report.uri}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ 
+                            flex: 1,
+                            minWidth: '150px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            padding: '0.625rem 1.25rem', 
+                            backgroundColor: 'white', 
+                            color: '#10b981', 
+                            textDecoration: 'none', 
+                            borderRadius: '6px',
+                            fontWeight: '500',
+                            fontSize: '0.9rem',
+                            border: '1px solid #10b981',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f0fdf4';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'white';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          👁️ View Report
+                        </a>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

@@ -69,33 +69,113 @@ export const importFHIRData = async (patientId: string): Promise<{ items: number
 const processResource = async (patientId: string, resource: FHIRResource) => {
   switch (resource.resourceType) {
     case 'Observation':
+      // Handle both simple observations and components (like BP)
+      let observationDetail = '';
+      if (resource.component && resource.component.length > 0) {
+        // Component observation (e.g., Blood Pressure)
+        observationDetail = resource.component
+          .map((c: any) => 
+            `${c.code?.coding?.[0]?.display || c.code?.text || 'Component'}: ${c.valueQuantity?.value || 'N/A'} ${c.valueQuantity?.unit || ''}`
+          )
+          .join(', ');
+      } else if (resource.valueQuantity) {
+        observationDetail = `Value: ${resource.valueQuantity.value} ${resource.valueQuantity.unit || ''}`;
+      } else if (resource.valueString) {
+        observationDetail = `Value: ${resource.valueString}`;
+      }
+      
       await addTimelineEvent(
         patientId,
         TimelineKind.CLINIC,
-        `Observation: ${resource.code?.text || 'Clinical Observation'}`,
-        `Value: ${resource.valueQuantity?.value || 'N/A'} ${resource.valueQuantity?.unit || ''}`,
+        `${resource.code?.text || resource.code?.coding?.[0]?.display || 'Clinical Observation'}`,
+        observationDetail,
         resource.id
       );
       break;
       
     case 'MedicationStatement':
+      const dosage = resource.dosage?.[0]?.text || `${resource.dosage?.[0]?.doseAndRate?.[0]?.doseQuantity?.value || ''} ${resource.dosage?.[0]?.doseAndRate?.[0]?.doseQuantity?.unit || ''}`;
       await addTimelineEvent(
         patientId,
         TimelineKind.CLINIC,
-        `Medication: ${resource.medicationCodeableConcept?.text || 'Unknown'}`,
-        `Status: ${resource.status || 'N/A'}`,
+        `Medication: ${resource.medicationCodeableConcept?.text || resource.medicationCodeableConcept?.coding?.[0]?.display || 'Unknown'}`,
+        `Status: ${resource.status}${dosage ? ` • Dosage: ${dosage}` : ''}`,
         resource.id
       );
       break;
       
     case 'Encounter':
+      const encounterType = resource.type?.[0]?.text || resource.type?.[0]?.coding?.[0]?.display || 'Healthcare Visit';
+      const encounterDate = resource.period?.start ? new Date(resource.period.start).toLocaleDateString() : 'N/A';
       await addTimelineEvent(
         patientId,
         TimelineKind.CLINIC,
-        `Encounter: ${resource.type?.[0]?.text || 'Healthcare Visit'}`,
-        `Date: ${resource.period?.start || 'N/A'}`,
+        `${encounterType}`,
+        `Visit on ${encounterDate}${resource.participant?.[0] ? ` with ${resource.participant[0].individual?.reference?.split('/')?.[1] || 'Healthcare Provider'}` : ''}`,
         resource.id
       );
+      break;
+      
+    case 'Condition':
+      const conditionStatus = resource.clinicalStatus?.coding?.[0]?.code || 'unknown';
+      const onsetDate = resource.onsetDateTime ? new Date(resource.onsetDateTime).toLocaleDateString() : 'Unknown date';
+      await addTimelineEvent(
+        patientId,
+        TimelineKind.CLINIC,
+        `Diagnosis: ${resource.code?.text || resource.code?.coding?.[0]?.display || 'Condition'}`,
+        `Status: ${conditionStatus} • Onset: ${onsetDate}`,
+        resource.id
+      );
+      break;
+      
+    case 'DiagnosticReport':
+      const resultCount = resource.result?.length || 0;
+      await addTimelineEvent(
+        patientId,
+        TimelineKind.CLINIC,
+        `Lab Report: ${resource.code?.text || resource.code?.coding?.[0]?.display || 'Diagnostic Report'}`,
+        `${resultCount} test result(s)${resource.conclusion ? ` • ${resource.conclusion}` : ''}`,
+        resource.id
+      );
+      break;
+      
+    case 'Immunization':
+      const vaccineDate = resource.occurrenceDateTime ? new Date(resource.occurrenceDateTime).toLocaleDateString() : 'N/A';
+      await addTimelineEvent(
+        patientId,
+        TimelineKind.CLINIC,
+        `Immunization: ${resource.vaccineCode?.text || resource.vaccineCode?.coding?.[0]?.display || 'Vaccine'}`,
+        `Administered on ${vaccineDate}`,
+        resource.id
+      );
+      break;
+      
+    case 'AllergyIntolerance':
+      const criticality = resource.criticality || 'unknown';
+      await addTimelineEvent(
+        patientId,
+        TimelineKind.CLINIC,
+        `Allergy: ${resource.code?.text || resource.code?.coding?.[0]?.display || 'Unknown Allergen'}`,
+        `Severity: ${criticality} • Type: ${resource.type || 'allergy'}`,
+        resource.id
+      );
+      break;
+      
+    case 'CarePlan':
+      const activityCount = resource.activity?.length || 0;
+      await addTimelineEvent(
+        patientId,
+        TimelineKind.CLINIC,
+        `Care Plan: ${resource.title || 'Patient Care Plan'}`,
+        `${resource.description || ''} • ${activityCount} activit${activityCount === 1 ? 'y' : 'ies'}`,
+        resource.id
+      );
+      break;
+      
+    // Silently skip resource types we don't process for timeline
+    case 'Practitioner':
+    case 'Patient':
+      // These are reference data, not clinical events
       break;
   }
 };

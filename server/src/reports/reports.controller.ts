@@ -21,18 +21,27 @@ export const getReports = async (req: AuthRequest, res: Response) => {
 
 export const createReport = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const { title, periodStart, periodEnd } = req.body || {};
   
   checkPatientAccess(req.user!.id, id, req.user!.role);
   
-  // Generate report
-  const reportResult = await generateReport(id);
+  // Generate report with options
+  const reportResult = await generateReport(id, {
+    title,
+    periodStart: periodStart ? new Date(periodStart) : undefined,
+    periodEnd: periodEnd ? new Date(periodEnd) : undefined
+  });
   
-  // Create report record
+  // Create report record with all new fields
   const report = await prisma.report.create({
     data: {
       patientId: id,
+      title: reportResult.title,
+      periodStart: reportResult.periodStart,
+      periodEnd: reportResult.periodEnd,
       uri: reportResult.uri,
       checksum: reportResult.checksum,
+      generatedBy: 'AI'
     },
   });
   
@@ -40,8 +49,8 @@ export const createReport = async (req: AuthRequest, res: Response) => {
   await addTimelineEvent(
     id,
     TimelineKind.SUMMARY,
-    'Daily Report Generated',
-    `Automated daily health report created`,
+    'AI Health Report Generated',
+    `AI-generated comprehensive health report: ${reportResult.title}`,
     report.id
   );
   

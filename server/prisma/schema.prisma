@@ -132,11 +132,16 @@ model TimelineEvent {
 }
 
 model Report {
-  id        String   @id @default(uuid())
-  patientId String
-  uri       String
-  checksum  String
-  createdAt DateTime @default(now())
+  id          String    @id @default(uuid())
+  patientId   String
+  title       String
+  periodStart DateTime?
+  periodEnd   DateTime?
+  uri         String
+  checksum    String
+  generatedBy String    @default("AI") // "AI", "SYSTEM", "MANUAL"
+  summaryHtml String?
+  createdAt   DateTime  @default(now())
 
   // Relations
   patient PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Cascade)
