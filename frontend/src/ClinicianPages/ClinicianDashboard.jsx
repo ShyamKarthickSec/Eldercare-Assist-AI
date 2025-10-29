@@ -52,20 +52,49 @@ const ClinicianDashboard = () => {
 
   return (
     <div className="patient-dashboard" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div id="overview">
-        <h1 className="page-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>Doctor Dashboard</h1>
+      <div id="overview" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ 
+          fontSize: '2.5rem',
+          fontWeight: '700',
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          marginBottom: '0.5rem',
+          letterSpacing: '-0.02em'
+        }}>
+          Doctor Dashboard
+        </h1>
+        <p style={{
+          fontSize: '1rem',
+          color: '#64748b',
+          fontWeight: '500',
+          marginBottom: '2rem'
+        }}>
+          Clinical oversight and patient health management
+        </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="page-card animate-fadeInUp">
           <div className="page-card-header">
-            <h2><LuUser /> Select Patient</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+              <LuUser /> Select Patient
+            </h2>
           </div>
           <div className="page-card-body">
           <select 
             onChange={(e) => handlePatientSelect(e.target.value)}
             className="form-control"
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
+            style={{ 
+              width: '100%', 
+              padding: '12px', 
+              borderRadius: '8px', 
+              border: '2px solid #10b981', 
+              fontSize: '1rem',
+              backgroundColor: '#f0fdf4',
+              transition: 'all 0.3s ease'
+            }}
           >
             <option value="">-- Select a Patient --</option>
             {patients.map(p => (

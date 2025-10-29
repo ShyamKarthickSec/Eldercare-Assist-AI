@@ -72,7 +72,7 @@ const ClinicianSidebar = () => {
       background: 'linear-gradient(to bottom, #f8fafc, #eef1f5)',
       borderRight: '1px solid #e5e7eb'
     }}>
-      <div className="sidebar-header" style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '1rem', marginBottom: '1rem' }}>
+      <div className="sidebar-header" style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '1rem', marginBottom: '1rem', textAlign: 'center' }}>
         <h2 className="sidebar-logo" style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b' }}>ElderCare Assist AI</h2>
         <p className="sidebar-subtitle" style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Doctor Portal</p>
         {userName && (

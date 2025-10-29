@@ -40,14 +40,14 @@ const monthData = [
  * * Ensure title style matches Reminders page via CSS
  */
 const PatientDashboard = () => {
-    const [filter, setFilter] = useState('Day');
+    const [filter, setFilter] = useState('Week'); // Locked to Week view
     const [expandedId, setExpandedId] = useState(null);
     const [mood, setMood] = useState(null); // UC-08
     const [isLoading, setIsLoading] = useState(false); // UI enhancement
     const [isOffline, setIsOffline] = useState(!navigator.onLine); // UC-01
 
     // --- State for data ---
-    const [timelineData, setTimelineData] = useState(dayData);
+    const [timelineData, setTimelineData] = useState(weekData); // Start with week data
 
     // Handle mood selection and persist to backend
     const handleMoodSelect = async (selectedMood) => {
@@ -133,23 +133,12 @@ const PatientDashboard = () => {
         };
     }, []);
 
-    // UC-01 Filter logic
+    // UC-01 Filter logic - locked to Week view
     useEffect(() => {
         setIsLoading(true);
         const timer = setTimeout(() => {
-            switch (filter) {
-                case 'Day':
-                    setTimelineData(dayData);
-                    break;
-                case 'Week':
-                    setTimelineData(weekData);
-                    break;
-                case 'Month':
-                    setTimelineData(monthData);
-                    break;
-                default:
-                    setTimelineData(dayData);
-            }
+            // Always use week data
+            setTimelineData(weekData);
             setExpandedId(null);
             setIsLoading(false);
         }, 500);
@@ -162,18 +151,12 @@ const PatientDashboard = () => {
         setExpandedId(expandedId === id ? null : id);
     };
 
-    // UI Enhancement: Refresh data simulation
+    // UI Enhancement: Refresh data simulation - always use week data
     const handleRefresh = () => {
         setIsLoading(true);
         setTimeout(() => {
-            let currentData;
-            switch (filter) {
-                case 'Day': currentData = dayData; break;
-                case 'Week': currentData = weekData; break;
-                case 'Month': currentData = monthData; break;
-                default: currentData = dayData;
-            }
-            setTimelineData([...currentData]);
+            // Always refresh with week data
+            setTimelineData([...weekData]);
             setIsLoading(false);
         }, 1500);
     };
@@ -202,11 +185,21 @@ const PatientDashboard = () => {
             <div className="page-header">
                  {/* +++ 添加了 className="dashboard-title" +++ */}
                 <h1 className="dashboard-title">My Dashboard</h1>
-                {/* UC-01 Filter Panel */}
+                {/* UC-01 Filter Panel - Week view only */}
                 <div className="filter-panel">
-                    <button className={`filter-btn ${filter === 'Day' ? 'active' : ''}`} onClick={() => setFilter('Day')}>Day</button>
-                    <button className={`filter-btn ${filter === 'Week' ? 'active' : ''}`} onClick={() => setFilter('Week')}>Week</button>
-                    <button className={`filter-btn ${filter === 'Month' ? 'active' : ''}`} onClick={() => setFilter('Month')}>Month</button>
+                    <span style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        backgroundColor: '#0d6efd',
+                        color: 'white',
+                        fontWeight: '500',
+                        fontSize: '0.95rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}>
+                        Week
+                    </span>
                     <button className="filter-btn" title="Refresh Data" onClick={handleRefresh} disabled={isLoading}>
                         {isLoading ? <LuRefreshCcw size={16} className="spin" /> : <LuRefreshCcw size={16} />}
                     </button>

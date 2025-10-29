@@ -188,17 +188,37 @@ const CaregiverDashboard = () => {
 
   return (
     <div className="patient-dashboard" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div id="overview">
-        <h1 className="page-header">Caregiver Dashboard</h1>
+      <div id="overview" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ 
+          fontSize: '2.5rem',
+          fontWeight: '700',
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          marginBottom: '0.5rem',
+          letterSpacing: '-0.02em'
+        }}>
+          Caregiver Dashboard
+        </h1>
+        <p style={{
+          fontSize: '1rem',
+          color: '#64748b',
+          fontWeight: '500',
+          marginBottom: '2rem'
+        }}>
+          Monitor and support your patient's wellbeing
+        </p>
         {patientName && (
           <div style={{ 
             padding: '0.75rem 1.5rem', 
             backgroundColor: '#e7f3ff', 
             borderRadius: '8px', 
-            marginBottom: '1.5rem',
-            display: 'flex',
+            marginBottom: '0',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            border: '1px solid #bfdbfe'
           }}>
             <LuUser size={20} />
             <span><strong>Monitoring Patient:</strong> {patientName}</span>
