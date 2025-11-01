@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './PatientPages.css';
-import { LuMic, LuCheck, LuX, LuTrash2, LuMessageSquare, LuStickyNote } from 'react-icons/lu';
+import { LuMic, LuCheck, LuX, LuTrash2, LuMessageSquare, LuStickyNote, LuSiren } from 'react-icons/lu';
 import { api } from '../lib/api';
 
 /**
@@ -8,6 +8,7 @@ import { api } from '../lib/api';
  * Features:
  * - Conversational AI using client STT/TTS
  * - Voice note creation with confirmation
+ * - Voice SOS trigger with confirmation
  * - Safe, empathetic responses (no medical advice)
  * - Command history with action badges
  */
@@ -17,12 +18,18 @@ const PatientVoice = () => {
   const [statusText, setStatusText] = useState('Press the button to start');
   const [transcript, setTranscript] = useState('');
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [confirmationType, setConfirmationType] = useState(null); // 'note' | 'sos'
   const [pendingNote, setPendingNote] = useState(null);
   const [history, setHistory] = useState([]);
   const [isBrowserSupported, setIsBrowserSupported] = useState(true);
+  const [sosSuccessBanner, setSosSuccessBanner] = useState(false);
+  const [sosCooldownUntil, setSosCooldownUntil] = useState(null);
   
   const recognitionRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
+  
+  // Feature flag for voice SOS (default: enabled)
+  const VOICE_SOS_ENABLED = true;
 
   // Initialize Web Speech API on mount
   useEffect(() => {
@@ -90,6 +97,24 @@ const PatientVoice = () => {
     synthRef.current.speak(utterance);
   };
 
+  // Detect SOS intent
+  const detectSOSIntent = (text) => {
+    const lowerText = text.toLowerCase();
+    
+    // SOS trigger patterns
+    const sosPatterns = [
+      /\b(help|emergency|urgent)\b/i,
+      /\bi\s+need\s+help\b/i,
+      /\bsend\s+(?:an?\s+)?(?:sos|alert|emergency)\b/i,
+      /\bcall\s+(?:for\s+)?help\b/i,
+      /\balert\s+(?:my\s+)?(?:caregiver|nurse)\b/i,
+      /\bpanic\b/i,
+      /\bsos\b/i,
+    ];
+
+    return sosPatterns.some(pattern => pattern.test(lowerText));
+  };
+
   // Detect note creation intent
   const detectNoteIntent = (text) => {
     const lowerText = text.toLowerCase();
@@ -124,6 +149,43 @@ const PatientVoice = () => {
   const processUserSpeech = async (text) => {
     setStatusText('Thinking...');
     
+    // Check for SOS intent first (highest priority)
+    const isSOSRequest = detectSOSIntent(text);
+    
+    if (isSOSRequest) {
+      // Check if voice SOS is enabled
+      if (!VOICE_SOS_ENABLED) {
+        const disabledMsg = "Voice SOS is disabled. Please use the red Emergency SOS button.";
+        speak(disabledMsg);
+        addToHistory(text, 'user');
+        addToHistory(disabledMsg, 'assistant');
+        setStatusText('Voice SOS disabled');
+        return;
+      }
+      
+      // Check cooldown
+      if (sosCooldownUntil && Date.now() < sosCooldownUntil) {
+        const remainingSeconds = Math.ceil((sosCooldownUntil - Date.now()) / 1000);
+        const cooldownMsg = `An SOS was recently sent. Please wait ${remainingSeconds} seconds before sending another, or use the red Emergency SOS button.`;
+        speak(cooldownMsg);
+        addToHistory(text, 'user');
+        addToHistory(cooldownMsg, 'assistant');
+        setStatusText('SOS cooldown active');
+        return;
+      }
+      
+      // SOS confirmation flow
+      setNeedsConfirmation(true);
+      setConfirmationType('sos');
+      setStatusText('SOS confirmation needed');
+      speak("It sounds like you need help. Should I send an emergency SOS alert now?");
+      addToHistory(text, 'user');
+      
+      // Log breadcrumb (non-PII)
+      console.log('[Voice] voice_sos_intent');
+      return;
+    }
+    
     // Check for note intent
     const noteContent = detectNoteIntent(text);
     
@@ -131,6 +193,7 @@ const PatientVoice = () => {
       // Note creation flow
       setPendingNote(noteContent);
       setNeedsConfirmation(true);
+      setConfirmationType('note');
       setStatusText('Ready to create note');
       speak(`I can create a note for your caregiver saying: ${noteContent}. Should I proceed?`);
       addToHistory(text, 'user');
@@ -177,7 +240,7 @@ const PatientVoice = () => {
       id: Date.now() + Math.random(),
       text,
       type, // 'user' | 'assistant'
-      badge, // 'note' | 'reminder' | null
+      badge, // 'note' | 'sos' | null
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setHistory(prev => [entry, ...prev]);
@@ -202,6 +265,7 @@ const PatientVoice = () => {
     setStatusText('Listening...');
     setTranscript('');
     setNeedsConfirmation(false);
+    setConfirmationType(null);
     setPendingNote(null);
 
     try {
@@ -211,6 +275,60 @@ const PatientVoice = () => {
       setIsListening(false);
       setStatusText('Failed to start. Please try again.');
     }
+  };
+
+  // Handle SOS confirmation
+  const handleSOSConfirmation = async (proceed) => {
+    if (proceed) {
+      setStatusText('Sending SOS...');
+      
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // Reuse the exact same SOS creation flow as the button
+        await api.post(`/patients/${user.id}/alerts/create`, {
+          type: 'SOS',
+          severity: 'HIGH',
+          title: 'SOS Emergency Alert (Voice)',
+          description: 'Patient triggered emergency SOS via voice command - immediate attention required',
+          status: 'ACTIVE'
+        });
+        
+        console.log('✅ Voice SOS alert sent to caregiver!');
+        
+        const successMsg = "SOS sent. Help is on the way.";
+        speak(successMsg);
+        addToHistory(successMsg, 'assistant', 'sos');
+        setStatusText('SOS sent successfully!');
+        
+        // Show success banner for 10 seconds
+        setSosSuccessBanner(true);
+        setTimeout(() => setSosSuccessBanner(false), 10000);
+        
+        // Set cooldown for 120 seconds (2 minutes)
+        setSosCooldownUntil(Date.now() + 120000);
+        
+        // Log breadcrumb (non-PII)
+        console.log('[Voice] voice_sos_confirmed');
+      } catch (error) {
+        console.error('Failed to send voice SOS:', error);
+        const errorMsg = "I couldn't send the SOS right now. Please press the red Emergency SOS button.";
+        speak(errorMsg);
+        addToHistory(errorMsg, 'assistant');
+        setStatusText('Failed to send SOS');
+        
+        // Log breadcrumb
+        console.log('[Voice] voice_sos_failed');
+      }
+    } else {
+      const cancelMsg = "Okay, I won't send an SOS alert.";
+      speak(cancelMsg);
+      addToHistory(cancelMsg, 'assistant');
+      setStatusText('SOS cancelled');
+    }
+
+    setNeedsConfirmation(false);
+    setConfirmationType(null);
   };
 
   // Handle note confirmation
@@ -243,7 +361,17 @@ const PatientVoice = () => {
     }
 
     setNeedsConfirmation(false);
+    setConfirmationType(null);
     setPendingNote(null);
+  };
+  
+  // Unified confirmation handler
+  const handleConfirmation = (proceed) => {
+    if (confirmationType === 'sos') {
+      handleSOSConfirmation(proceed);
+    } else if (confirmationType === 'note') {
+      handleNoteConfirmation(proceed);
+    }
   };
 
   return (
@@ -310,8 +438,46 @@ const PatientVoice = () => {
               </div>
             )}
 
+            {/* SOS Confirmation Prompt */}
+            {needsConfirmation && confirmationType === 'sos' && (
+              <div className="confirmation-prompt" style={{
+                marginTop: '1.5rem',
+                padding: '1.5rem',
+                backgroundColor: '#fef2f2',
+                borderRadius: '8px',
+                border: '3px solid #dc2626',
+              }}>
+                <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+                  <LuSiren size={48} style={{ color: '#dc2626', marginBottom: '0.5rem' }} />
+                  <strong style={{ color: '#dc2626', fontSize: '1.2rem', display: 'block' }}>Emergency SOS</strong>
+                </div>
+                <p style={{ marginBottom: '1rem', fontWeight: '600', color: '#1e293b', textAlign: 'center', fontSize: '1.05rem' }}>
+                  It sounds like you need help. Should I send an emergency SOS alert now?
+                </p>
+                <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>
+                  Your caregiver will be notified immediately.
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                  <button 
+                    className="btn-action-secondary" 
+                    onClick={() => handleConfirmation(false)}
+                    style={{ flex: 1 }}
+                  >
+                    <LuX /> No, Cancel
+                  </button>
+                  <button 
+                    className="btn-action" 
+                    onClick={() => handleConfirmation(true)}
+                    style={{ flex: 1, backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+                  >
+                    <LuCheck /> Yes, Send SOS
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Note Confirmation Prompt */}
-            {needsConfirmation && pendingNote && (
+            {needsConfirmation && confirmationType === 'note' && pendingNote && (
               <div className="confirmation-prompt" style={{
                 marginTop: '1.5rem',
                 padding: '1.5rem',
@@ -337,19 +503,36 @@ const PatientVoice = () => {
                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
                   <button 
                     className="btn-action-secondary" 
-                    onClick={() => handleNoteConfirmation(false)}
+                    onClick={() => handleConfirmation(false)}
                     style={{ flex: 1 }}
                   >
                     <LuX /> No, Cancel
                   </button>
                   <button 
                     className="btn-action" 
-                    onClick={() => handleNoteConfirmation(true)}
+                    onClick={() => handleConfirmation(true)}
                     style={{ flex: 1, backgroundColor: '#10b981' }}
                   >
                     <LuCheck /> Yes, Save Note
                   </button>
                 </div>
+              </div>
+            )}
+            
+            {/* SOS Success Banner */}
+            {sosSuccessBanner && (
+              <div style={{
+                marginTop: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#dcfce7',
+                borderRadius: '8px',
+                border: '2px solid #16a34a',
+                textAlign: 'center',
+                animation: 'fadeIn 0.3s ease-in',
+              }}>
+                <LuSiren size={24} style={{ color: '#16a34a', marginBottom: '0.5rem' }} />
+                <strong style={{ color: '#166534', display: 'block', fontSize: '1rem' }}>Emergency alert sent!</strong>
+                <p style={{ margin: '0.5rem 0 0 0', color: '#15803d', fontSize: '0.9rem' }}>Your caregiver has been notified.</p>
               </div>
             )}
             
@@ -362,7 +545,7 @@ const PatientVoice = () => {
                   <li>"Tell me something nice."</li>
                   <li>"Create a note that I'm feeling dizzy."</li>
                   <li>"Leave a note for my caregiver that I missed my walk."</li>
-                  <li>"Remember that I need help with groceries."</li>
+                  <li style={{ color: '#dc2626', fontWeight: '600' }}>"Help" or "Emergency" (for SOS alert)</li>
                 </ul>
               </div>
             )}
@@ -414,13 +597,14 @@ const PatientVoice = () => {
                           <span style={{
                             marginLeft: '0.5rem',
                             padding: '0.15rem 0.5rem',
-                            backgroundColor: item.badge === 'note' ? '#dcfce7' : '#dbeafe',
-                            color: item.badge === 'note' ? '#166534' : '#1e40af',
+                            backgroundColor: item.badge === 'sos' ? '#fecaca' : item.badge === 'note' ? '#dcfce7' : '#dbeafe',
+                            color: item.badge === 'sos' ? '#991b1b' : item.badge === 'note' ? '#166534' : '#1e40af',
                             borderRadius: '4px',
                             fontSize: '0.75rem',
                             fontWeight: '600',
                           }}>
-                            {item.badge === 'note' ? <><LuStickyNote size={10} /> Note Saved</> : '✓'}
+                            {item.badge === 'sos' ? <><LuSiren size={10} /> SOS Sent</> : 
+                             item.badge === 'note' ? <><LuStickyNote size={10} /> Note Saved</> : '✓'}
                           </span>
                         )}
                       </div>
