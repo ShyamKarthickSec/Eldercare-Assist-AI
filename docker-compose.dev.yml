@@ -1,0 +1,37 @@
+# Development-specific docker-compose override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: base  # Use base stage for dev (includes dev dependencies)
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount entire source for hot reload
+      - ./server:/app
+      - /app/node_modules
+      - /app/dist
+    ports:
+      - "3001:3001"
+      - "9229:9229"  # Debugging port
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: build  # Use build stage for dev
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount entire source for hot reload
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/dist
+    ports:
+      - "5173:5173"  # Vite dev server
+

@@ -128,7 +128,7 @@ export const getMoodHistory = async (req: AuthRequest, res: Response) => {
         },
       },
       orderBy: {
-        timestamp: 'desc',
+        at: 'desc',
       },
       take: limit,
     });
@@ -138,7 +138,7 @@ export const getMoodHistory = async (req: AuthRequest, res: Response) => {
       const moodMatch = event.title.match(/Mood Update - (\w+)/);
       return {
         mood: moodMatch ? moodMatch[1] : 'Unknown',
-        timestamp: event.timestamp,
+        timestamp: event.at,
         detail: event.detail,
         id: event.id,
       };

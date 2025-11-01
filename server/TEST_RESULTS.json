@@ -1,0 +1,83 @@
+{
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "startTime": "2025-10-31T00:53:19.048Z",
+  "tests": [
+    {
+      "testId": "TC-BE-008",
+      "testName": "Database Seeding",
+      "status": "PASS",
+      "actualResult": "Users:4, Patients:2, Timeline:283, FHIR:7, Reports:5",
+      "expectedResult": "Expected: Users≥4, Patients≥2, Timeline≥278, FHIR=7, Reports≥5",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.117Z"
+    },
+    {
+      "testId": "TC-AUTH-001/002/003",
+      "testName": "User Authentication Data",
+      "status": "PASS",
+      "actualResult": "Patient, Caregiver, and Clinician users exist",
+      "expectedResult": "All 3 roles should be present",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.120Z"
+    },
+    {
+      "testId": "TC-BE-001",
+      "testName": "FHIR Data Generation",
+      "status": "PASS",
+      "actualResult": "2 files, 89 resources, 97 KB",
+      "expectedResult": "2 files, 89 resources each, ~97 KB",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.124Z"
+    },
+    {
+      "testId": "TC-BE-002",
+      "testName": "FHIR Data Import",
+      "status": "PASS",
+      "actualResult": "7 imports spanning 180 days",
+      "expectedResult": "7 imports spanning 6 months",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.127Z"
+    },
+    {
+      "testId": "TC-BE-003",
+      "testName": "Timeline Events from FHIR",
+      "status": "PASS",
+      "actualResult": "265 clinic events",
+      "expectedResult": "Expected: ≥100 clinic events",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.134Z"
+    },
+    {
+      "testId": "TC-BE-005",
+      "testName": "PDF Report Generation",
+      "status": "PASS",
+      "actualResult": "11 PDFs, 789 KB",
+      "expectedResult": "≥5 PDF files with size >0",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.137Z"
+    },
+    {
+      "testId": "TC-CARE-006",
+      "testName": "Shared Notes Feature",
+      "status": "PASS",
+      "actualResult": "4 notes, 4 with AI summaries",
+      "expectedResult": "Notes should have AI summaries",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.140Z"
+    },
+    {
+      "testId": "TC-DOC-007",
+      "testName": "Report Metadata",
+      "status": "PASS",
+      "actualResult": "5 reports with complete AI metadata",
+      "expectedResult": "≥5 reports with title, period, URI, AI flag",
+      "notes": "",
+      "timestamp": "2025-10-31T00:53:19.143Z"
+    }
+  ],
+  "endTime": "2025-10-31T00:53:19.145Z",
+  "duration": "0.10s",
+  "passRate": "100.0%"
+}

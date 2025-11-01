@@ -1,0 +1,92 @@
+# ================================
+# Fly.io Configuration
+# ElderCare Assist AI Backend
+# ================================
+
+app = "eldercare-assist-ai"
+primary_region = "syd"  # Sydney, Australia
+
+# ================================
+# Build Configuration
+# ================================
+[build]
+  dockerfile = "./server/Dockerfile"
+
+# ================================
+# Environment Variables
+# ================================
+[env]
+  PORT = "3001"
+  NODE_ENV = "production"
+  DATABASE_URL = "file:/data/production.db"
+
+# ================================
+# Persistent Storage (SQLite)
+# ================================
+[mounts]
+  source = "eldercare_data"
+  destination = "/data"
+  initial_size = "1GB"
+
+# ================================
+# HTTP Service Configuration
+# ================================
+[[services]]
+  internal_port = 3001
+  processes = ["app"]
+  protocol = "tcp"
+
+  # Concurrency limits
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  # HTTP checks
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  # Health check
+  [[services.tcp_checks]]
+    grace_period = "10s"
+    interval = "30s"
+    restart_limit = 0
+    timeout = "5s"
+
+  [[services.http_checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    restart_limit = 0
+    timeout = "5s"
+    tls_skip_verify = false
+
+# ================================
+# Resource Allocation
+# ================================
+[vm]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# ================================
+# Deployment Strategy
+# ================================
+[deploy]
+  strategy = "rolling"
+
+# ================================
+# Metrics (optional)
+# ================================
+[metrics]
+  port = 9091
+  path = "/metrics"
+

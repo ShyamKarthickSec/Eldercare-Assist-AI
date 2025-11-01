@@ -19,8 +19,12 @@ export const startReportCron = () => {
         const report = await prisma.report.create({
           data: {
             patientId: patient.userId,
+            title: reportResult.title,
+            periodStart: reportResult.periodStart,
+            periodEnd: reportResult.periodEnd,
             uri: reportResult.uri,
             checksum: reportResult.checksum,
+            generatedBy: 'AI',
           },
         });
         
