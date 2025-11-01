@@ -2,6 +2,27 @@
 
 ## 📋 Quick Commands
 
+### Docker Testing (Local)
+
+```bash
+# 1. Start all services
+docker-compose up
+
+# 2. Access application
+# Frontend: http://localhost:80
+# Backend: http://localhost:3001
+# API Docs: http://localhost:3001/api/docs
+
+# 3. Stop services
+docker-compose down
+```
+
+**Time**: Instant (after first build)  
+**Cost**: Free  
+**Requirement**: Docker Desktop
+
+---
+
 ### GitHub Actions Testing
 
 ```bash
@@ -12,10 +33,6 @@ git push origin main
 
 # 2. View results
 # Go to: https://github.com/YOUR_USERNAME/YOUR_REPO/actions
-
-# 3. Local testing (with Act)
-act -W .github/workflows/frontend-ci.yml
-act -W .github/workflows/backend-ci.yml
 ```
 
 **Time**: ~5 minutes  
@@ -24,41 +41,14 @@ act -W .github/workflows/backend-ci.yml
 
 ---
 
-### Fly.io Testing
-
-```bash
-# 1. Install & Login
-flyctl auth login
-
-# 2. Create app
-flyctl apps create eldercare-assist-ai
-
-# 3. Create volume
-flyctl volumes create eldercare_data --region syd --size 1
-
-# 4. Set secrets
-flyctl secrets set JWT_SECRET=your-secret-here
-
-# 5. Deploy
-cd server
-flyctl deploy --config ../fly.toml
-
-# 6. Verify
-flyctl status
-curl https://eldercare-assist-ai.fly.dev/health
-
-# 7. Setup auto-deploy
-flyctl auth token
-# Add token to GitHub Secrets as FLY_API_TOKEN
-```
-
-**Time**: ~15 minutes  
-**Cost**: ~$2.75/month  
-**Requirement**: Fly.io account
-
----
-
 ## ✅ Quick Verification
+
+### Docker Working?
+
+- [ ] `docker-compose up` starts without errors
+- [ ] Frontend loads at http://localhost:80
+- [ ] Backend responds at http://localhost:3001
+- [ ] Health check returns 200: http://localhost:3001/health
 
 ### GitHub Actions Working?
 
@@ -67,16 +57,23 @@ flyctl auth token
 - [ ] Build artifacts available for download
 - [ ] No failed steps in logs
 
-### Fly.io Working?
-
-- [ ] `flyctl status` shows "started"
-- [ ] Health check returns 200: `curl https://eldercare-assist-ai.fly.dev/health`
-- [ ] API docs load: `https://eldercare-assist-ai.fly.dev/api/docs`
-- [ ] No errors in logs: `flyctl logs`
-
 ---
 
 ## 🆘 Quick Troubleshooting
+
+### Docker Failed?
+
+```bash
+# Check Docker is running
+docker --version
+
+# Rebuild from scratch
+docker-compose down -v
+docker-compose up --build
+
+# View logs
+docker-compose logs -f
+```
 
 ### GitHub Actions Failed?
 
@@ -88,28 +85,12 @@ git commit -m "Add lock file"
 git push
 ```
 
-### Fly.io Failed?
-
-```bash
-# Check logs
-flyctl logs
-
-# Restart app
-flyctl restart
-
-# Check secrets
-flyctl secrets list
-
-# SSH debug
-flyctl ssh console
-```
-
 ---
 
 ## 📚 Full Guides
 
+- **Docker**: [DOCKER_QUICK_START.md](./DOCKER_QUICK_START.md)
 - **GitHub Actions**: [GITHUB_ACTIONS_TEST_GUIDE.md](./GITHUB_ACTIONS_TEST_GUIDE.md)
-- **Fly.io**: [FLY_IO_TEST_GUIDE.md](./FLY_IO_TEST_GUIDE.md)
 - **Complete Setup**: [CI_CD_SETUP_GUIDE.md](./CI_CD_SETUP_GUIDE.md)
 
 ---
@@ -120,10 +101,8 @@ flyctl ssh console
 |-----------|------|-----------------|
 | **Docker** | `docker-compose up` | ✅ Frontend on :80, Backend on :3001 |
 | **GitHub Actions** | Push to main | ✅ All workflows pass (green ✓) |
-| **Fly.io** | `flyctl status` | ✅ "started", health checks passing |
-| **Auto-Deploy** | Push to main | ✅ Deploys automatically to Fly.io |
+| **Local Dev** | `npm run dev` | ✅ Works as before (unchanged) |
 
 ---
 
-**Quick Start**: Choose one to test first, then add the other! 🚀
-
+**Quick Start**: Test Docker first, then GitHub Actions! 🚀

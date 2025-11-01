@@ -249,59 +249,44 @@ See [DOCKER_QUICK_START.md](./DOCKER_QUICK_START.md) for more commands.
 
 ## 🚀 Deployment
 
-### Fly.io (Production)
+### Docker Deployment (Recommended)
 
-1. **Install Fly CLI**:
+1. **Build and run with Docker Compose**:
    ```bash
-   curl -L https://fly.io/install.sh | sh
+   docker-compose up -d
    ```
 
-2. **Login**:
+2. **Access your application**:
+   - Frontend: http://localhost:80
+   - Backend: http://localhost:3001
+   - API Docs: http://localhost:3001/api/docs
+
+3. **View logs**:
    ```bash
-   flyctl auth login
+   docker-compose logs -f
    ```
 
-3. **Create app**:
+4. **Stop services**:
    ```bash
-   flyctl apps create eldercare-assist-ai
+   docker-compose down
    ```
 
-4. **Create volume**:
-   ```bash
-   flyctl volumes create eldercare_data --region syd --size 1
-   ```
+See [DOCKER_QUICK_START.md](./DOCKER_QUICK_START.md) for complete guide.
 
-5. **Set secrets**:
-   ```bash
-   flyctl secrets set JWT_SECRET=your-secret-key
-   flyctl secrets set OPENAI_API_KEY=sk-your-key
-   ```
+### GitHub Actions (Continuous Integration)
 
-6. **Deploy**:
-   ```bash
-   cd server
-   flyctl deploy --config ../fly.toml
-   ```
+Automated testing runs on every push:
 
-See [CI_CD_SETUP_GUIDE.md](./CI_CD_SETUP_GUIDE.md) for complete deployment guide.
-
-### GitHub Actions (Auto-Deploy)
-
-1. **Get Fly.io token**:
-   ```bash
-   flyctl auth token
-   ```
-
-2. **Add to GitHub Secrets**:
-   - Go to: `Settings` → `Secrets and variables` → `Actions`
-   - Add: `FLY_API_TOKEN` with your token
-
-3. **Push to main**:
+1. **Push to GitHub**:
    ```bash
    git push origin main
    ```
 
-Deployment happens automatically on every push to `main`.
+2. **View CI results**:
+   - Go to: `Actions` tab in GitHub
+   - See automated builds and tests
+
+All tests run automatically - no manual deployment needed!
 
 ---
 
@@ -309,9 +294,10 @@ Deployment happens automatically on every push to `main`.
 
 | Document | Description |
 |----------|-------------|
-| [CI_CD_SETUP_GUIDE.md](./CI_CD_SETUP_GUIDE.md) | Complete CI/CD setup and deployment guide |
+| [CI_CD_SETUP_GUIDE.md](./CI_CD_SETUP_GUIDE.md) | Complete CI/CD setup with Docker and GitHub Actions |
 | [DOCKER_QUICK_START.md](./DOCKER_QUICK_START.md) | Quick start guide for Docker |
-| [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) | Pre-deployment verification checklist |
+| [GITHUB_ACTIONS_TEST_GUIDE.md](./GITHUB_ACTIONS_TEST_GUIDE.md) | Testing GitHub Actions workflows |
+| [QUICK_TEST_REFERENCE.md](./QUICK_TEST_REFERENCE.md) | Quick command reference card |
 | [TEST_PLAN.md](./server/TEST_PLAN.md) | Comprehensive testing documentation (67 test cases) |
 | [MANUAL_TEST_GUIDE.md](./server/MANUAL_TEST_GUIDE.md) | Step-by-step manual testing guide |
 | [VOICE_SOS_IMPLEMENTATION.md](./server/VOICE_SOS_IMPLEMENTATION.md) | Voice SOS feature documentation |
@@ -401,13 +387,13 @@ This project is licensed under the MIT License.
 - [x] FHIR integration (mock)
 - [x] Docker containerization
 - [x] CI/CD with GitHub Actions
-- [x] Fly.io deployment
 - [ ] Real-time notifications (WebSockets)
 - [ ] Mobile app (React Native)
 - [ ] Multi-language support
 - [ ] Real FHIR integration
 - [ ] Telemedicine video calls
 - [ ] Wearable device integration
+- [ ] Cloud deployment (AWS/Azure/GCP)
 
 ---
 
@@ -417,7 +403,7 @@ This project is licensed under the MIT License.
 - **Frontend**: ✅ Production Ready
 - **Docker**: ✅ Configured
 - **CI/CD**: ✅ Automated
-- **Deployment**: ✅ Fly.io Ready
+- **Deployment**: ✅ Docker Compose Ready
 - **Tests**: ✅ 67 Test Cases Documented
 - **Documentation**: ✅ Complete
 
@@ -427,7 +413,7 @@ This project is licensed under the MIT License.
 
 - Built with ❤️ for elderly care
 - Powered by OpenAI for AI features
-- Deployed on Fly.io
+- Containerized with Docker
 - Icons by Lucide (React Icons)
 - Maps by Leaflet
 
