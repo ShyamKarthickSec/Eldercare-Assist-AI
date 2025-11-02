@@ -2,6 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import './PatientPages.css';
 import { LuMic, LuCheck, LuX, LuTrash2, LuMessageSquare, LuStickyNote, LuSiren } from 'react-icons/lu';
 import { api } from '../lib/api';
+import {
+  VOICE_EMOTION_ENABLED,
+  initEmotionDetection,
+  detectEmotion,
+  getEmotionColor,
+  getEmotionIcon,
+  cleanupEmotionDetection
+} from '../lib/emotionDetection';
+import { processEmotionForAlerts } from '../lib/emotionAlerts';
 
 /**
  * Voice AI Companion for Elderly Patients
@@ -27,6 +36,9 @@ const PatientVoice = () => {
   
   const recognitionRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
+  const audioContextRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const emotionModelReadyRef = useRef(false); // Use ref instead of state to persist across re-renders
   
   // Feature flag for voice SOS (default: enabled)
   const VOICE_SOS_ENABLED = true;
@@ -73,6 +85,29 @@ const PatientVoice = () => {
     };
   }, []);
 
+  // Initialize emotion detection (lazy load)
+  useEffect(() => {
+    if (VOICE_EMOTION_ENABLED) {
+      initEmotionDetection()
+        .then(() => {
+          emotionModelReadyRef.current = true;
+          console.log('[Voice] Emotion detection ready - model ref set to true');
+        })
+        .catch((error) => {
+          console.log('[Voice] Emotion detection unavailable:', error.message);
+          emotionModelReadyRef.current = false;
+        });
+    }
+
+    return () => {
+      if (VOICE_EMOTION_ENABLED) {
+        console.log('[Voice] Cleaning up emotion detection');
+        cleanupEmotionDetection();
+        emotionModelReadyRef.current = false;
+      }
+    };
+  }, []);
+
   // Stop TTS on unmount or when starting to listen
   const stopSpeaking = () => {
     if (synthRef.current) {
@@ -101,7 +136,14 @@ const PatientVoice = () => {
   const detectSOSIntent = (text) => {
     const lowerText = text.toLowerCase();
     
-    // SOS trigger patterns
+    // CRITICAL: Suicidal ideation patterns (highest priority)
+    const criticalPatterns = [
+      /\b(suicidal|suicide|kill\s+myself|end\s+(?:my\s+)?life|don'?t\s+want\s+to\s+live)\b/i,
+      /\bwant\s+to\s+die\b/i,
+      /\bhurt\s+myself\b/i,
+    ];
+    
+    // Standard SOS trigger patterns
     const sosPatterns = [
       /\b(help|emergency|urgent)\b/i,
       /\bi\s+need\s+help\b/i,
@@ -111,6 +153,13 @@ const PatientVoice = () => {
       /\bpanic\b/i,
       /\bsos\b/i,
     ];
+    
+    // Check critical patterns first
+    const isCritical = criticalPatterns.some(pattern => pattern.test(lowerText));
+    if (isCritical) {
+      console.warn('[Voice] ⚠️ CRITICAL: Suicidal ideation detected');
+      return true;
+    }
 
     return sosPatterns.some(pattern => pattern.test(lowerText));
   };
@@ -145,9 +194,40 @@ const PatientVoice = () => {
     return null;
   };
 
+
   // Process user speech
   const processUserSpeech = async (text) => {
     setStatusText('Thinking...');
+    
+    // Detect emotion from the transcript (audio buffer not available in this implementation)
+    // In production, you would capture audio buffer during STT and pass it here
+    let detectedEmotion = null;
+    const modelReady = emotionModelReadyRef.current;
+    console.log('[Voice] Starting emotion detection...', { 
+      enabled: VOICE_EMOTION_ENABLED, 
+      modelReady: modelReady,
+      text: text 
+    });
+    
+    if (VOICE_EMOTION_ENABLED && modelReady) {
+      try {
+        detectedEmotion = await detectEmotion(text, null); // null = no audio buffer, use text fallback
+        console.log('[Voice] Emotion detected:', detectedEmotion);
+        
+        // Send alert to caregivers if emotion is concerning (Sad/Stressed)
+        // This does NOT show the % to patients - alerts only go to caregivers
+        if (detectedEmotion) {
+          await processEmotionForAlerts(detectedEmotion, text);
+        }
+      } catch (error) {
+        console.warn('[Voice] Emotion detection failed:', error);
+      }
+    } else {
+      console.warn('[Voice] Emotion detection skipped:', { 
+        enabled: VOICE_EMOTION_ENABLED, 
+        modelReady: modelReady 
+      });
+    }
     
     // Check for SOS intent first (highest priority)
     const isSOSRequest = detectSOSIntent(text);
@@ -157,7 +237,7 @@ const PatientVoice = () => {
       if (!VOICE_SOS_ENABLED) {
         const disabledMsg = "Voice SOS is disabled. Please use the red Emergency SOS button.";
         speak(disabledMsg);
-        addToHistory(text, 'user');
+        addToHistory(text, 'user', null, detectedEmotion);
         addToHistory(disabledMsg, 'assistant');
         setStatusText('Voice SOS disabled');
         return;
@@ -168,7 +248,7 @@ const PatientVoice = () => {
         const remainingSeconds = Math.ceil((sosCooldownUntil - Date.now()) / 1000);
         const cooldownMsg = `An SOS was recently sent. Please wait ${remainingSeconds} seconds before sending another, or use the red Emergency SOS button.`;
         speak(cooldownMsg);
-        addToHistory(text, 'user');
+        addToHistory(text, 'user', null, detectedEmotion);
         addToHistory(cooldownMsg, 'assistant');
         setStatusText('SOS cooldown active');
         return;
@@ -179,7 +259,7 @@ const PatientVoice = () => {
       setConfirmationType('sos');
       setStatusText('SOS confirmation needed');
       speak("It sounds like you need help. Should I send an emergency SOS alert now?");
-      addToHistory(text, 'user');
+      addToHistory(text, 'user', null, detectedEmotion);
       
       // Log breadcrumb (non-PII)
       console.log('[Voice] voice_sos_intent');
@@ -196,15 +276,15 @@ const PatientVoice = () => {
       setConfirmationType('note');
       setStatusText('Ready to create note');
       speak(`I can create a note for your caregiver saying: ${noteContent}. Should I proceed?`);
-      addToHistory(text, 'user');
+      addToHistory(text, 'user', null, detectedEmotion);
     } else {
       // Regular conversation
-      await handleConversation(text);
+      await handleConversation(text, detectedEmotion);
     }
   };
 
   // Handle conversational AI response
-  const handleConversation = async (userMessage) => {
+  const handleConversation = async (userMessage, detectedEmotion = null) => {
     try {
       const response = await api.post('/companion/message', {
         message: userMessage,
@@ -217,7 +297,7 @@ const PatientVoice = () => {
         throw new Error('No response from assistant');
       }
       
-      addToHistory(userMessage, 'user');
+      addToHistory(userMessage, 'user', null, detectedEmotion);
       addToHistory(aiReply, 'assistant');
       
       setStatusText('Speaking...');
@@ -229,18 +309,19 @@ const PatientVoice = () => {
       const fallback = "I'm having trouble connecting right now. But I'm here to help you feel better.";
       setStatusText('Connection issue');
       speak(fallback);
-      addToHistory(userMessage, 'user');
+      addToHistory(userMessage, 'user', null, detectedEmotion);
       addToHistory(fallback, 'assistant');
     }
   };
 
   // Add entry to history
-  const addToHistory = (text, type, badge = null) => {
+  const addToHistory = (text, type, badge = null, emotion = null) => {
     const entry = {
       id: Date.now() + Math.random(),
       text,
       type, // 'user' | 'assistant'
       badge, // 'note' | 'sos' | null
+      emotion, // { label, confidence, source } | null
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setHistory(prev => [entry, ...prev]);
@@ -364,7 +445,7 @@ const PatientVoice = () => {
     setConfirmationType(null);
     setPendingNote(null);
   };
-  
+
   // Unified confirmation handler
   const handleConfirmation = (proceed) => {
     if (confirmationType === 'sos') {
@@ -518,7 +599,7 @@ const PatientVoice = () => {
                 </div>
               </div>
             )}
-            
+
             {/* SOS Success Banner */}
             {sosSuccessBanner && (
               <div style={{
@@ -605,6 +686,31 @@ const PatientVoice = () => {
                           }}>
                             {item.badge === 'sos' ? <><LuSiren size={10} /> SOS Sent</> : 
                              item.badge === 'note' ? <><LuStickyNote size={10} /> Note Saved</> : '✓'}
+                          </span>
+                        )}
+                        {item.emotion && VOICE_EMOTION_ENABLED && (
+                          <span 
+                            style={{
+                              marginLeft: '0.5rem',
+                              padding: '0.2rem 0.6rem',
+                              backgroundColor: `${getEmotionColor(item.emotion.label)}15`,
+                              color: getEmotionColor(item.emotion.label),
+                              border: `1px solid ${getEmotionColor(item.emotion.label)}40`,
+                              borderRadius: '12px',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                            }}
+                            aria-label={`Emotion detected: ${item.emotion.label} (${Math.round(item.emotion.confidence * 100)}% confidence)`}
+                            title={`Detected from ${item.emotion.source === 'audio' ? 'voice' : 'text'} locally. No audio sent.`}
+                          >
+                            <span>{getEmotionIcon(item.emotion.label)}</span>
+                            <span>{item.emotion.label}</span>
+                            <span style={{ opacity: 0.7, fontSize: '0.65rem' }}>
+                              {Math.round(item.emotion.confidence * 100)}%
+                            </span>
                           </span>
                         )}
                       </div>
