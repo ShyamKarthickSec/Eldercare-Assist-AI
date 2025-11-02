@@ -459,7 +459,7 @@ This prototype demonstrates:
    - **Application Frameworks**: React 19, Express.js, Vite
    - **Cloud Services**: Fly.io deployment platform
    - **Deployment Systems**: Docker, Docker Compose, GitHub Actions CI/CD
-   - **AI Tools**: OpenAI GPT-4o-mini SDK, TensorFlow.js (emotion detection), AI-assisted code generation
+   - **AI Tools**: OpenAI GPT-4o-mini SDK, TensorFlow.js (emotion detection)
 
 **Innovation Highlights**: Client-side emotion detection (privacy-first), voice intent recognition with natural language processing, AI-generated health reports, and fully containerized microservices architecture.
 
