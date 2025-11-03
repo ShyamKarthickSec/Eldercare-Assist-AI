@@ -2,9 +2,9 @@
 
 > A comprehensive elderly care management platform with AI-powered features, voice assistance, and real-time health monitoring.
 
-[![Frontend CI](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/frontend-ci.yml)
-[![Backend CI](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/backend-ci.yml)
-[![Deploy](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/deploy-fly.yml/badge.svg)](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/deploy-fly.yml)
+[![Frontend CI](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/frontend-ci.yml/badge.svg)]([https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/frontend-ci.yml](https://github.com/ShyamKarthickSec/Eldercare-Assist-AI/blob/main/.github/workflows/frontend-ci.yml))
+[![Backend CI](https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/backend-ci.yml/badge.svg)]([https://github.com/YOUR_ORG/YOUR_REPO/actions/workflows/backend-ci.yml](https://github.com/ShyamKarthickSec/Eldercare-Assist-AI/blob/main/.github/workflows/backend-ci.yml))
+
 
 ---
 
@@ -152,7 +152,7 @@ npm run dev
 - **CI/CD**: GitHub Actions (Automated builds, tests, and deployments)
 - **Deployment**: Fly.io (Cloud platform with automated CI/CD integration)
 - **Version Control**: Git + GitHub
-- **Code Generation**: AI-assisted development (demonstrated through iterative implementation)
+- **Code Generation**: AI-assisted Unit Testing and Automated Testing(demonstrated through iterative implementation)
 
 ---
 
@@ -265,7 +265,7 @@ See [DOCKER_QUICK_START.md](./DOCKER_QUICK_START.md) for more commands.
    ```
 
 2. **Access your application**:
-   - Frontend: http://localhost:80
+   - Frontend: http://localhost:5173
    - Backend: http://localhost:3001
    - API Docs: http://localhost:3001/api/docs
 
